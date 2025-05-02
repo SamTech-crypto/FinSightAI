@@ -27,10 +27,67 @@ st.set_page_config(page_title="CFO AI Agent", layout="wide")
 st.markdown("""
     <style>
     @import url('https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css');
-    .main { background-color: #f3f4f6; min-height: 100vh; padding: 1.5rem; }
-    .card { background-color: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .title { font-size: 2rem; font-weight: bold; color: #1e3a8a; margin-bottom: 1rem; }
-    .subtitle { font-size: 1.25rem; font-weight: 600; color: #374151; margin-bottom: 1rem; }
+    
+    /* Main Container Styling */
+    .main {
+        background-color: #f4f7fb;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    /* Card Styling */
+    .card {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Titles */
+    .title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1D4ED8;
+        margin-bottom: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #4B5563;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Text Input Styling */
+    .stTextInput input {
+        border-radius: 0.375rem;
+        border: 2px solid #CBD5E1;
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+
+    /* Button Styling */
+    .stButton button {
+        background-color: #1D4ED8;
+        color: white;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.375rem;
+        border: none;
+    }
+
+    .stButton button:hover {
+        background-color: #2563EB;
+    }
+
+    /* Custom Card for displaying tables */
+    .dataframe-card {
+        background-color: #F9FAFB;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -57,12 +114,14 @@ with tab1:
         anomalies = detect_anomalies(data)
 
         # Plot forecast
-        fig = px.line(forecast, x="Date", y="Forecast", title="Budget Forecast")
+        fig = px.line(forecast, x="Date", y="Forecast", title="Budget Forecast", template="plotly_dark")
         st.plotly_chart(fig, use_container_width=True)
 
         # Display anomalies
         st.markdown('<h3 class="subtitle">Anomalies Detected</h3>', unsafe_allow_html=True)
+        st.markdown('<div class="dataframe-card">', unsafe_allow_html=True)
         st.dataframe(anomalies, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     except FileNotFoundError as e:
         st.error(f"Error: {e}. Please ensure 'data/sample_financials.csv' exists in the repository.")
