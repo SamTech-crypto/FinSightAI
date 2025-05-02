@@ -1,17 +1,23 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
-# Fix for "ModuleNotFoundError" by adding 'src' to sys.path
 import sys
 import os
+from dotenv import load_dotenv
+
+# Add 'src' to sys.path for importing custom modules
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
-from forecasting import forecast_budget
-from anomaly import detect_anomalies
-from chatbot import get_response
+# Import custom modules
+try:
+    from forecasting import forecast_budget
+    from anomaly import detect_anomalies
+    from chatbot import get_response
+except ImportError as e:
+    st.error(f"Error importing custom modules: {e}. Ensure 'src' folder contains 'forecasting.py', 'anomaly.py', and 'chatbot.py'.")
+    st.stop()
 
-from dotenv import load_dotenv
+# Load environment variables
 load_dotenv()
 
 # Streamlit page config
@@ -40,7 +46,13 @@ with tab1:
     st.markdown('<h2 class="subtitle">Financial Dashboard</h2>', unsafe_allow_html=True)
 
     try:
-        data = pd.read_csv("data/sample_financials.csv")
+        # Load financial data
+        data_path = "data/sample_financials.csv"
+        if not os.path.exists(data_path):
+            raise FileNotFoundError(f"Financial data file not found at '{data_path}'")
+        data = pd.read_csv(data_path)
+
+        # Generate forecast and detect anomalies
         forecast = forecast_budget(data)
         anomalies = detect_anomalies(data)
 
@@ -52,8 +64,10 @@ with tab1:
         st.markdown('<h3 class="subtitle">Anomalies Detected</h3>', unsafe_allow_html=True)
         st.dataframe(anomalies, use_container_width=True)
 
+    except FileNotFoundError as e:
+        st.error(f"Error: {e}. Please ensure 'data/sample_financials.csv' exists in the repository.")
     except Exception as e:
-        st.error(f"Error loading data: {e}")
+        st.error(f"Error processing financial data: {e}. Check 'forecasting.py' or 'anomaly.py' for compatibility issues.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -66,8 +80,11 @@ with tab2:
 
     if query:
         with st.spinner("Thinking..."):
-            response = get_response(query)
-            st.markdown(f"**Response**: {response}")
+            try:
+                response = get_response(query)
+                st.markdown(f"**Response**: {response}")
+            except Exception as e:
+                st.error(f"Error in chatbot response: {e}. Check 'chatbot.py' or API configuration.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
