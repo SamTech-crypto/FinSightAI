@@ -8,4 +8,5 @@ statsmodels>=0.14.0
 python-dotenv>=1.0.0
 numpy>=1.25.0
 Cython>=0.29.33
-requests>=2.31.0  # Add if chatbot.py uses HTTP requests
+requests>=2.31.0
+openai==0.28.0
