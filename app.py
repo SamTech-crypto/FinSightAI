@@ -23,7 +23,7 @@ load_dotenv()
 # Streamlit page config
 st.set_page_config(page_title="CFO AI Agent", layout="wide")
 
-# Updated Tailwind-style custom CSS with enhanced visuals
+# Updated Tailwind-style custom CSS with adjustments for the top space
 st.markdown("""
     <style>
     @import url('https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css');
@@ -33,31 +33,27 @@ st.markdown("""
     .main {
         background: linear-gradient(135deg, #e0e7ff 0%, #f4f7fb 100%);
         min-height: 100vh;
-        padding: 2.5rem;
+        padding: 1rem; /* Reduced padding to minimize empty space */
         font-family: 'Inter', sans-serif;
     }
 
-    /* Card Styling */
-    .card {
-        background-color: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease-in-out;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
+    /* Header Section to Fill Top Space */
+    .header {
+        background: #1E3A8A;
+        padding: 1rem;
+        border-radius: 0.75rem 0.75rem 0 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
     }
 
     /* Titles */
     .title {
-        font-size: 3rem;
+        font-size: 2.5rem; /* Slightly smaller for better fit */
         font-weight: 700;
-        color: #1E3A8A;
-        margin-bottom: 2rem;
+        color: #ffffff; /* White text on dark header */
+        margin-bottom: 0.5rem; /* Reduced margin to bring tabs closer */
         text-align: center;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
     }
 
     .subtitle {
@@ -109,6 +105,19 @@ st.markdown("""
         border-left: 5px solid #3B82F6;
     }
 
+    /* Card Styling */
+    .card {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
     /* Tab Styling */
     .stTabs [role="tablist"] {
         border-bottom: 2px solid #DBEAFE;
@@ -136,7 +145,11 @@ st.markdown("""
 
 # Layout
 st.markdown('<div class="main">', unsafe_allow_html=True)
+
+# Add a header section to fill the top space
+st.markdown('<div class="header">', unsafe_allow_html=True)
 st.markdown('<h1 class="title">CFO AI Agent</h1>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["📊 Dashboard", "💬 Chatbot"])
 
