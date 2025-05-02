@@ -1,34 +1,25 @@
 import pandas as pd
 import numpy as np
-import os
 
-# Function to generate dynamic financial data
-def generate_dynamic_data(periods: int = 36, seasonal_periods: int = 12) -> pd.DataFrame:
-    """Generates a DataFrame with synthetic financial data that changes on each refresh."""
-    
-    # Generate monthly dates (e.g., 36 months)
-    dates = pd.date_range(start='2021-01-01', periods=periods, freq='M')
-    
-    # Simulate seasonal behavior (some fluctuation every year) and random noise
-    seasonal = np.sin(np.linspace(0, 2 * np.pi, seasonal_periods))  # Sine wave for seasonality
-    seasonal_repeats = np.tile(seasonal, periods // seasonal_periods + 1)[:periods]  # Repeat the seasonal pattern
-    
-    trend = np.linspace(1000, 2000, periods)  # A linear upward trend in the 'Amount'
-    
-    # Add some random noise
-    noise = np.random.normal(loc=0, scale=200, size=periods)
-    
-    # Combine them: trend + seasonality + noise
-    amounts = (trend + seasonal_repeats + noise).round(2)
-    
-    # Create the DataFrame
+def generate_dynamic_data(periods: int = 120, seasonal_periods: int = 12) -> pd.DataFrame:
+    """Generates a large synthetic financial dataset with seasonality, trend, and noise."""
+    dates = pd.date_range(start='2015-01-01', periods=periods, freq='M')
+
+    # Simulate yearly seasonality with variation
+    seasonal = 100 * np.sin(np.linspace(0, 2 * np.pi, seasonal_periods))  
+    seasonal_repeats = np.tile(seasonal, periods // seasonal_periods + 1)[:periods]
+
+    # Add multi-phase trend (simulate changing growth rates)
+    base = 1000
+    linear_trend = np.linspace(0, 3000, periods)
+    slow_growth = linear_trend * np.where(np.arange(periods) < 60, 0.5, 1.2)
+
+    # Introduce random shocks/noise
+    noise = np.random.normal(loc=0, scale=250, size=periods)
+
+    # Combine into amount
+    amounts = (base + slow_growth + seasonal_repeats + noise).round(2)
+
     df = pd.DataFrame({'Date': dates, 'Amount': amounts})
-    
-    # Save to CSV to simulate data persistence across refreshes
     df.to_csv('financial_data.csv', index=False)
-    
     return df
-
-# Call the function to generate data
-generated_data = generate_dynamic_data()
-print(generated_data.head())
