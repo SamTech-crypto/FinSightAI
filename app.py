@@ -23,69 +23,112 @@ load_dotenv()
 # Streamlit page config
 st.set_page_config(page_title="CFO AI Agent", layout="wide")
 
-# Tailwind-style custom CSS via CDN
+# Updated Tailwind-style custom CSS with enhanced visuals
 st.markdown("""
     <style>
     @import url('https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css');
-    
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
     /* Main Container Styling */
     .main {
-        background-color: #f4f7fb;
+        background: linear-gradient(135deg, #e0e7ff 0%, #f4f7fb 100%);
         min-height: 100vh;
-        padding: 2rem;
+        padding: 2.5rem;
+        font-family: 'Inter', sans-serif;
     }
 
     /* Card Styling */
     .card {
         background-color: white;
         padding: 2rem;
-        border-radius: 0.75rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 1rem;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
     }
 
     /* Titles */
     .title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: #1D4ED8;
-        margin-bottom: 1.5rem;
+        font-size: 3rem;
+        font-weight: 700;
+        color: #1E3A8A;
+        margin-bottom: 2rem;
+        text-align: center;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .subtitle {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
         font-weight: 600;
-        color: #4B5563;
-        margin-bottom: 1.25rem;
+        color: #3B82F6;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #DBEAFE;
+        padding-bottom: 0.5rem;
     }
 
     /* Text Input Styling */
     .stTextInput input {
-        border-radius: 0.375rem;
-        border: 2px solid #CBD5E1;
-        padding: 0.75rem;
-        font-size: 1rem;
+        border-radius: 0.5rem;
+        border: 2px solid #93C5FD;
+        padding: 1rem;
+        font-size: 1.1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .stTextInput input:focus {
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     /* Button Styling */
     .stButton button {
-        background-color: #1D4ED8;
+        background: linear-gradient(to right, #3B82F6, #1D4ED8);
         color: white;
-        font-size: 1rem;
-        padding: 0.75rem 1.5rem;
-        border-radius: 0.375rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
         border: none;
+        transition: background 0.3s ease;
     }
 
     .stButton button:hover {
-        background-color: #2563EB;
+        background: linear-gradient(to right, #2563EB, #1E3A8A);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
     }
 
     /* Custom Card for displaying tables */
     .dataframe-card {
-        background-color: #F9FAFB;
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        background: #F9FAFB;
+        border-radius: 0.75rem;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border-left: 5px solid #3B82F6;
+    }
+
+    /* Tab Styling */
+    .stTabs [role="tablist"] {
+        border-bottom: 2px solid #DBEAFE;
+    }
+
+    .stTabs [role="tab"] {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #6B7280;
+        padding: 0.75rem 1.5rem;
+        transition: color 0.3s ease;
+    }
+
+    .stTabs [role="tab"][aria-selected="true"] {
+        color: #1D4ED8;
+        border-bottom: 3px solid #1D4ED8;
+    }
+
+    .stTabs [role="tab"]:hover {
+        color: #3B82F6;
     }
 
     </style>
@@ -95,7 +138,7 @@ st.markdown("""
 st.markdown('<div class="main">', unsafe_allow_html=True)
 st.markdown('<h1 class="title">CFO AI Agent</h1>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["Dashboard", "Chatbot"])
+tab1, tab2 = st.tabs(["📊 Dashboard", "💬 Chatbot"])
 
 # --- Dashboard Tab ---
 with tab1:
@@ -113,14 +156,53 @@ with tab1:
         forecast = forecast_budget(data)
         anomalies = detect_anomalies(data)
 
-        # Plot forecast
-        fig = px.line(forecast, x="Date", y="Forecast", title="Budget Forecast", template="plotly_dark")
+        # Enhanced Plotly chart with better styling
+        fig = px.line(
+            forecast, 
+            x="Date", 
+            y="Forecast", 
+            title="Budget Forecast",
+            template="plotly_white",
+            color_discrete_sequence=["#3B82F6"],
+            line_shape="spline"
+        )
+        fig.update_traces(
+            line=dict(width=3),
+            hovertemplate="Date: %{x}<br>Forecast: $%{y:.2f}"
+        )
+        fig.update_layout(
+            title_font=dict(size=22, color="#1E3A8A", family="'Inter', sans-serif"),
+            xaxis_title="Date",
+            yaxis_title="Amount ($)",
+            font=dict(family="'Inter', sans-serif", size=14, color="#4B5563"),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            xaxis=dict(
+                gridcolor="#E5E7EB",
+                tickfont=dict(size=12),
+            ),
+            yaxis=dict(
+                gridcolor="#E5E7EB",
+                tickfont=dict(size=12),
+            ),
+            hovermode="x unified",
+            margin=dict(l=50, r=50, t=80, b=50),
+        )
         st.plotly_chart(fig, use_container_width=True)
 
-        # Display anomalies
+        # Display anomalies with better styling
         st.markdown('<h3 class="subtitle">Anomalies Detected</h3>', unsafe_allow_html=True)
         st.markdown('<div class="dataframe-card">', unsafe_allow_html=True)
-        st.dataframe(anomalies, use_container_width=True)
+        st.dataframe(
+            anomalies.style.set_properties(**{
+                'background-color': '#F9FAFB',
+                'color': '#1F2937',
+                'border-color': '#E5E7EB',
+                'font-family': "'Inter', sans-serif",
+                'font-size': '14px',
+            }).highlight_max(subset=['Amount'], color='#FECACA'),
+            use_container_width=True
+        )
         st.markdown('</div>', unsafe_allow_html=True)
 
     except FileNotFoundError as e:
@@ -141,7 +223,7 @@ with tab2:
         with st.spinner("Thinking..."):
             try:
                 response = get_response(query)
-                st.markdown(f"**Response**: {response}")
+                st.markdown(f"**Response**: {response}", unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Error in chatbot response: {e}. Check 'chatbot.py' or API configuration.")
 
