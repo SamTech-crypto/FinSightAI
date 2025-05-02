@@ -1,0 +1,14 @@
+streamlit==1.31.0
+fastapi==0.115.0
+uvicorn==0.30.6
+openai==1.51.0
+PyPDF2==3.0.1
+pandas==2.2.2
+openpyxl==3.1.5
+python-dotenv==1.0.1
+statsmodels==0.13.5
+pytest==7.3.1
+
+# Added for compatibility
+numpy==1.26.4
+scipy==1.13.0
