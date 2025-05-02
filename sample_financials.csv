@@ -1,0 +1,6 @@
+Date,Account,Department,Amount,Description
+2024-01-15,Revenue,Sales,45000.00,Monthly subscription
+2024-01-20,COGS,Operations,-12000.00,Inventory costs
+2024-01-25,Marketing,Marketing,-5000.00,Google Ads
+2024-02-01,R&D,Engineering,-8000.00,Prototype testing
+2024-02-10,Revenue,Sales,47000.00,New customer contracts
