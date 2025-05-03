@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 # Add 'src' to sys.path for importing custom modules
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
+# Load environment variables
+load_dotenv()
+
 # Import custom modules
 try:
     from forecasting import forecast_budget
@@ -17,10 +20,9 @@ except ImportError as e:
     st.error(f"Error importing custom modules: {e}. Ensure 'src' folder contains 'forecasting.py', 'anomaly.py', and 'chatbot.py'.")
     st.stop()
 
-# Load environment variables
-load_dotenv()
+from generate_data import generate_dynamic_data
 
-# Streamlit page config
+# Streamlit config
 st.set_page_config(page_title="CFO AI Agent", layout="wide")
 
 # Load external CSS
@@ -36,10 +38,8 @@ except FileNotFoundError:
 def load_data(file):
     return pd.read_csv(file)
 
-# Layout
+# UI Layout
 st.markdown('<div class="main">', unsafe_allow_html=True)
-
-# Header
 st.markdown('<div class="header">', unsafe_allow_html=True)
 st.markdown('<h1 class="title">CFO AI Agent</h1>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
@@ -51,17 +51,18 @@ with tab1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h2 class="subtitle">Financial Dashboard</h2>', unsafe_allow_html=True)
 
-    # File uploader
     uploaded_file = st.file_uploader("Upload Financial Data (CSV)", type="csv")
     data_path = "data/sample_financials.csv"
 
+    # Load data
     try:
         if uploaded_file:
             data = load_data(uploaded_file)
         elif os.path.exists(data_path):
             data = load_data(data_path)
         else:
-            raise FileNotFoundError(f"Financial data file not found at '{data_path}'")
+            st.warning("Sample financials not found. Generating synthetic data...")
+            data = generate_dynamic_data()
 
         # Dynamic parameters
         st.markdown("### Configuration")
@@ -69,15 +70,11 @@ with tab1:
         z_score_threshold = st.slider("Z-Score Threshold", min_value=2.0, max_value=4.0, value=3.0)
         forecast_periods = st.slider("Forecast Periods", min_value=6, max_value=24, value=12)
 
-        # Generate forecast and detect anomalies
         with st.spinner("Generating forecast..."):
             forecast = forecast_budget(data, periods=forecast_periods)
+
         with st.spinner("Detecting anomalies..."):
-            anomalies = detect_anomalies(
-                data,
-                threshold=threshold,
-                z_score_threshold=z_score_threshold
-            )
+            anomalies = detect_anomalies(data, threshold=threshold, z_score_threshold=z_score_threshold)
 
         # Forecast plot
         fig = px.line(
@@ -125,10 +122,8 @@ with tab1:
         st.download_button("Download Anomalies", anomalies.to_csv(index=False), "anomalies.csv")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    except FileNotFoundError as e:
-        st.error(f"Error: {e}. Please ensure 'data/sample_financials.csv' exists or upload a CSV file.")
     except Exception as e:
-        st.error(f"Error processing financial data: {e}. Check 'forecasting.py' or 'anomaly.py' for compatibility issues.")
+        st.error(f"Error processing financial data: {e}")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -147,9 +142,8 @@ with tab2:
                     response = get_response(query)
                     st.markdown(f"**Response**: {response}", unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"Error in chatbot response: {e}. Check 'chatbot.py' or API configuration.")
+                    st.error(f"Error in chatbot response: {e}")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Close main container
 st.markdown('</div>', unsafe_allow_html=True)
