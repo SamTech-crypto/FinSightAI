@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 # Import custom modules
 try:
     from forecasting import forecast_budget
-    from anomaly import detect_anomalies
+    from anomaly import detect_anomalies, plot_anomalies
     from chatbot import get_response
 except ImportError as e:
     st.error(f"Error importing custom modules: {e}. Ensure 'src' folder contains 'forecasting.py', 'anomaly.py', and 'chatbot.py'.")
@@ -23,130 +23,23 @@ load_dotenv()
 # Streamlit page config
 st.set_page_config(page_title="CFO AI Agent", layout="wide")
 
-# Updated Tailwind-style custom CSS with adjustments for the top space
-st.markdown("""
-    <style>
-    @import url('https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css');
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+# Load external CSS
+try:
+    with open("styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+except FileNotFoundError:
+    st.error("styles.css not found. Please ensure it exists in the project directory.")
+    st.stop()
 
-    /* Main Container Styling */
-    .main {
-        background: linear-gradient(135deg, #e0e7ff 0%, #f4f7fb 100%);
-        min-height: 100vh;
-        padding: 1rem; /* Reduced padding to minimize empty space */
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* Header Section to Fill Top Space */
-    .header {
-        background: #1E3A8A;
-        padding: 1rem;
-        border-radius: 0.75rem 0.75rem 0 0;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        margin-bottom: 1rem;
-    }
-
-    /* Titles */
-    .title {
-        font-size: 2.5rem; /* Slightly smaller for better fit */
-        font-weight: 700;
-        color: #ffffff; /* White text on dark header */
-        margin-bottom: 0.5rem; /* Reduced margin to bring tabs closer */
-        text-align: center;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-    }
-
-    .subtitle {
-        font-size: 1.75rem;
-        font-weight: 600;
-        color: #3B82F6;
-        margin-bottom: 1.5rem;
-        border-bottom: 2px solid #DBEAFE;
-        padding-bottom: 0.5rem;
-    }
-
-    /* Text Input Styling */
-    .stTextInput input {
-        border-radius: 0.5rem;
-        border: 2px solid #93C5FD;
-        padding: 1rem;
-        font-size: 1.1rem;
-        transition: border-color 0.3s ease;
-    }
-
-    .stTextInput input:focus {
-        border-color: #3B82F6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    /* Button Styling */
-    .stButton button {
-        background: linear-gradient(to right, #3B82F6, #1D4ED8);
-        color: white;
-        font-size: 1.1rem;
-        font-weight: 600;
-        padding: 0.75rem 2rem;
-        border-radius: 0.5rem;
-        border: none;
-        transition: background 0.3s ease;
-    }
-
-    .stButton button:hover {
-        background: linear-gradient(to right, #2563EB, #1E3A8A);
-        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
-    }
-
-    /* Custom Card for displaying tables */
-    .dataframe-card {
-        background: #F9FAFB;
-        border-radius: 0.75rem;
-        padding: 2rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        border-left: 5px solid #3B82F6;
-    }
-
-    /* Card Styling */
-    .card {
-        background-color: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease-in-out;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-    }
-
-    /* Tab Styling */
-    .stTabs [role="tablist"] {
-        border-bottom: 2px solid #DBEAFE;
-    }
-
-    .stTabs [role="tab"] {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #6B7280;
-        padding: 0.75rem 1.5rem;
-        transition: color 0.3s ease;
-    }
-
-    .stTabs [role="tab"][aria-selected="true"] {
-        color: #1D4ED8;
-        border-bottom: 3px solid #1D4ED8;
-    }
-
-    .stTabs [role="tab"]:hover {
-        color: #3B82F6;
-    }
-
-    </style>
-""", unsafe_allow_html=True)
+# Cache data loading
+@st.cache_data
+def load_data(file):
+    return pd.read_csv(file)
 
 # Layout
 st.markdown('<div class="main">', unsafe_allow_html=True)
 
-# Add a header section to fill the top space
+# Header
 st.markdown('<div class="header">', unsafe_allow_html=True)
 st.markdown('<h1 class="title">CFO AI Agent</h1>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
@@ -158,31 +51,46 @@ with tab1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h2 class="subtitle">Financial Dashboard</h2>', unsafe_allow_html=True)
 
+    # File uploader
+    uploaded_file = st.file_uploader("Upload Financial Data (CSV)", type="csv")
+    data_path = "data/sample_financials.csv"
+
     try:
-        # Load financial data
-        data_path = "data/sample_financials.csv"
-        if not os.path.exists(data_path):
+        if uploaded_file:
+            data = load_data(uploaded_file)
+        elif os.path.exists(data_path):
+            data = load_data(data_path)
+        else:
             raise FileNotFoundError(f"Financial data file not found at '{data_path}'")
-        data = pd.read_csv(data_path)
+
+        # Dynamic parameters
+        st.markdown("### Configuration")
+        threshold = st.slider("IQR Threshold", min_value=1.0, max_value=3.0, value=1.5)
+        z_score_threshold = st.slider("Z-Score Threshold", min_value=2.0, max_value=4.0, value=3.0)
+        forecast_periods = st.slider("Forecast Periods", min_value=6, max_value=24, value=12)
 
         # Generate forecast and detect anomalies
-        forecast = forecast_budget(data)
-        anomalies = detect_anomalies(data)
+        with st.spinner("Generating forecast..."):
+            forecast = forecast_budget(data, periods=forecast_periods)
+        with st.spinner("Detecting anomalies..."):
+            anomalies = detect_anomalies(
+                data,
+                threshold=threshold,
+                z_score_threshold=z_score_threshold
+            )
 
-        # Enhanced Plotly chart with better styling
+        # Forecast plot
         fig = px.line(
-            forecast, 
-            x="Date", 
-            y="Forecast", 
+            forecast,
+            x="Date",
+            y="Forecast",
             title="Budget Forecast",
             template="plotly_white",
             color_discrete_sequence=["#3B82F6"],
             line_shape="spline"
         )
-        fig.update_traces(
-            line=dict(width=3),
-            hovertemplate="Date: %{x}<br>Forecast: $%{y:.2f}"
-        )
+        fig.add_scatter(x=data['Date'], y=data['Amount'], mode='lines', name='Historical', line=dict(color='#6B7280'))
+        fig.update_traces(line=dict(width=3), hovertemplate="Date: %{x}<br>Amount: $%{y:.2f}")
         fig.update_layout(
             title_font=dict(size=22, color="#1E3A8A", family="'Inter', sans-serif"),
             xaxis_title="Date",
@@ -190,21 +98,19 @@ with tab1:
             font=dict(family="'Inter', sans-serif", size=14, color="#4B5563"),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            xaxis=dict(
-                gridcolor="#E5E7EB",
-                tickfont=dict(size=12),
-            ),
-            yaxis=dict(
-                gridcolor="#E5E7EB",
-                tickfont=dict(size=12),
-            ),
+            xaxis=dict(gridcolor="#E5E7EB", tickfont=dict(size=12)),
+            yaxis=dict(gridcolor="#E5E7EB", tickfont=dict(size=12)),
             hovermode="x unified",
             margin=dict(l=50, r=50, t=80, b=50),
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # Display anomalies with better styling
+        # Anomaly plot
         st.markdown('<h3 class="subtitle">Anomalies Detected</h3>', unsafe_allow_html=True)
+        anomaly_fig = plot_anomalies(data, anomalies)
+        st.plotly_chart(anomaly_fig, use_container_width=True)
+
+        # Display anomalies
         st.markdown('<div class="dataframe-card">', unsafe_allow_html=True)
         st.dataframe(
             anomalies.style.set_properties(**{
@@ -216,10 +122,11 @@ with tab1:
             }).highlight_max(subset=['Amount'], color='#FECACA'),
             use_container_width=True
         )
+        st.download_button("Download Anomalies", anomalies.to_csv(index=False), "anomalies.csv")
         st.markdown('</div>', unsafe_allow_html=True)
 
     except FileNotFoundError as e:
-        st.error(f"Error: {e}. Please ensure 'data/sample_financials.csv' exists in the repository.")
+        st.error(f"Error: {e}. Please ensure 'data/sample_financials.csv' exists or upload a CSV file.")
     except Exception as e:
         st.error(f"Error processing financial data: {e}. Check 'forecasting.py' or 'anomaly.py' for compatibility issues.")
 
@@ -230,15 +137,17 @@ with tab2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h2 class="subtitle">Financial Chatbot</h2>', unsafe_allow_html=True)
 
-    query = st.text_input("Ask a financial question:", placeholder="E.g., What's our Q1 burn rate?")
-
-    if query:
-        with st.spinner("Thinking..."):
-            try:
-                response = get_response(query)
-                st.markdown(f"**Response**: {response}", unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"Error in chatbot response: {e}. Check 'chatbot.py' or API configuration.")
+    if not os.getenv("OPENAI_API_KEY"):
+        st.warning("Chatbot disabled: OpenAI API key not configured.")
+    else:
+        query = st.text_input("Ask a financial question:", placeholder="E.g., What's our Q1 burn rate?")
+        if query:
+            with st.spinner("Thinking..."):
+                try:
+                    response = get_response(query)
+                    st.markdown(f"**Response**: {response}", unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error in chatbot response: {e}. Check 'chatbot.py' or API configuration.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
