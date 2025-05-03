@@ -5,24 +5,17 @@ import sys
 import os
 from dotenv import load_dotenv
 
-# Add 'src' to sys.path for importing custom modules
+# Add 'src' to sys.path (optional if using proper packaging)
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+
+# Import custom modules from src
+from src import forecast_budget, detect_anomalies, get_response, plot_anomalies
+from generate_data import generate_dynamic_data
 
 # Load environment variables
 load_dotenv()
 
-# Import custom modules
-try:
-    from forecasting import forecast_budget
-    from anomaly import detect_anomalies, plot_anomalies
-    from chatbot import get_response
-except ImportError as e:
-    st.error(f"Error importing custom modules: {e}. Ensure 'src' folder contains 'forecasting.py', 'anomaly.py', and 'chatbot.py'.")
-    st.stop()
-
-from generate_data import generate_dynamic_data
-
-# Streamlit config
+# Streamlit page config
 st.set_page_config(page_title="CFO AI Agent", layout="wide")
 
 # Load external CSS
@@ -54,7 +47,6 @@ with tab1:
     uploaded_file = st.file_uploader("Upload Financial Data (CSV)", type="csv")
     data_path = "data/sample_financials.csv"
 
-    # Load data
     try:
         if uploaded_file:
             data = load_data(uploaded_file)
@@ -64,15 +56,17 @@ with tab1:
             st.warning("Sample financials not found. Generating synthetic data...")
             data = generate_dynamic_data()
 
-        # Dynamic parameters
+        # Configuration controls
         st.markdown("### Configuration")
         threshold = st.slider("IQR Threshold", min_value=1.0, max_value=3.0, value=1.5)
         z_score_threshold = st.slider("Z-Score Threshold", min_value=2.0, max_value=4.0, value=3.0)
         forecast_periods = st.slider("Forecast Periods", min_value=6, max_value=24, value=12)
 
+        # Forecasting
         with st.spinner("Generating forecast..."):
             forecast = forecast_budget(data, periods=forecast_periods)
 
+        # Anomaly detection
         with st.spinner("Detecting anomalies..."):
             anomalies = detect_anomalies(data, threshold=threshold, z_score_threshold=z_score_threshold)
 
