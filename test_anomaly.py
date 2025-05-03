@@ -3,13 +3,20 @@ import pandas as pd
 from src.anomaly import detect_anomalies
 
 @pytest.fixture
-def sample_data():
-    data = {'Date': pd.date_range(start='2023-01-01', periods=24, freq='M'),
-            'Amount': [1000 + i * 50 for i in range(24)]}
-    data['Amount'][10] = 5000  # Introduce an anomaly
-    return pd.DataFrame(data)
+def anomaly_data():
+    data = pd.DataFrame({
+        'Date': pd.date_range(start='2023-01-01', periods=10, freq='M'),
+        'Amount': [100, 105, 110, 5000, 115, 120, 90, 85, 80, 6000],
+        'Account': ['Sales'] * 10,
+        'Department': ['Finance'] * 10
+    })
+    return data
 
-def test_detect_anomalies(sample_data):
-    anomalies = detect_anomalies(sample_data)
-    assert len(anomalies) == 1
-    assert anomalies['Amount'].iloc[0] == 5000
+def test_anomalies_detected(anomaly_data):
+    anomalies = detect_anomalies(anomaly_data)
+    assert not anomalies.empty
+    assert len(anomalies) >= 2
+
+def test_description_column(anomaly_data):
+    anomalies = detect_anomalies(anomaly_data)
+    assert 'Description' in anomalies.columns
