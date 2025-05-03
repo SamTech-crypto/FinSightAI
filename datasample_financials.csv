@@ -2,43 +2,59 @@ import pandas as pd
 import numpy as np
 
 def generate_dynamic_data(periods: int = 120, seasonal_periods: int = 12) -> pd.DataFrame:
-    """Generates a synthetic financial dataset with varied accounts, departments, seasonality, trend, and anomalies."""
+    """Generates a synthetic financial dataset with varied accounts, departments, seasonality, trend, and anomalies.
+    
+    Args:
+        periods (int): Number of time periods to generate. Defaults to 120.
+        seasonal_periods (int): Number of periods in a seasonal cycle. Defaults to 12.
+    
+    Returns:
+        pd.DataFrame: Generated financial dataset with columns: Date, Amount, Account, Department.
+    
+    Notes:
+        - Saves output to 'data/sample_financials.csv'.
+        - Includes seasonal patterns, department-specific trends, random noise, and randomized anomalies.
+        - Ensures all amounts are positive.
+    """
     dates = pd.date_range(start='2015-01-01', periods=periods, freq='M')
 
     # Define accounts and departments
     accounts = ['Marketing', 'R&D', 'Operations', 'Sales', 'HR']
     departments = ['Finance', 'Engineering', 'Sales', 'Admin', 'Product']
 
-    # Generate random assignments for accounts and departments
+    # Generate random assignments
     account_assignments = np.random.choice(accounts, size=periods)
     department_assignments = np.random.choice(departments, size=periods)
 
-    # Simulate yearly seasonality with variation
+    # Simulate yearly seasonality
     seasonal = 150 * np.sin(np.linspace(0, 2 * np.pi * (periods / seasonal_periods), periods))
 
     # Add multi-phase trend with department-specific adjustments
     base = 1000
     linear_trend = np.linspace(0, 4000, periods)
     trend_adjustments = np.where(
-        np.isin(department_assignments, ['Finance', 'Engineering']), 
-        1.5,  # Higher growth for Finance and Engineering
-        0.8   # Slower growth for others
+        np.isin(department_assignments, ['Finance', 'Engineering']),
+        1.5,  # Higher growth
+        0.8   # Slower growth
     )
     adjusted_trend = linear_trend * trend_adjustments
 
     # Introduce random shocks/noise
     noise = np.random.normal(loc=0, scale=300, size=periods)
 
-    # Introduce deliberate anomalies (e.g., spikes in certain accounts)
+    # Calculate amounts
     amounts = base + adjusted_trend + seasonal + noise
-    for i in range(0, periods, 20):  # Add anomalies every 20 periods
-        if account_assignments[i] in ['Marketing', 'Sales']:
-            amounts[i] *= 2.5  # Significant spike for Marketing/Sales
-        else:
-            amounts[i] *= 0.5  # Significant drop for others
 
-    # Round amounts
-    amounts = amounts.round(2)
+    # Introduce randomized anomalies
+    anomaly_indices = np.random.choice(periods, size=int(periods * 0.1), replace=False)
+    for i in anomaly_indices:
+        if account_assignments[i] in ['Marketing', 'Sales']:
+            amounts[i] *= 2.5  # Significant spike
+        else:
+            amounts[i] *= 0.5  # Significant drop
+
+    # Ensure positive amounts
+    amounts = np.clip(amounts.round(2), 0, None)
 
     # Create DataFrame
     df = pd.DataFrame({
@@ -47,7 +63,8 @@ def generate_dynamic_data(periods: int = 120, seasonal_periods: int = 12) -> pd.
         'Account': account_assignments,
         'Department': department_assignments
     })
-    
+
     # Save to CSV
-    df.to_csv('financial_data.csv', index=False)
+    os.makedirs('data', exist_ok=True)
+    df.to_csv('data/sample_financials.csv', index=False)
     return df
